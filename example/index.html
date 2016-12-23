@@ -1,8 +1,5 @@
-# Dubtrack WS Client
-
-Usage:
-
-```
+<script src="/client.js"></script>
+<script>
 var socket = new SocketClient({
   host: 'wss://ws.dubtrack.fm',
   secret: 'some-super-secret'
@@ -51,4 +48,4 @@ socket.connection.on('disconnected', () => {
   // }, 1000)
 })
 socket.connection.on('failed', () => console.log('Failed'))
-```
+</script>
