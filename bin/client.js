@@ -201,6 +201,8 @@ module.exports = class Channel extends EventEmitter {
    * Will bind list of event to handle disconnect
    */
   onDisconnected() {
+    if (this.presence) this.presence.clearClients();
+
     this.setState(this.states.disconnected);
   }
 
@@ -236,6 +238,8 @@ module.exports = class Channel extends EventEmitter {
    */
   detach(cb) {
     cb = cb || _.noop;
+    if (this.presence) this.presence.clearClients();
+
     if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
 
     if (this.state === this.states.detached) return cb();
@@ -290,7 +294,7 @@ module.exports = class Channel extends EventEmitter {
         action = 'update';
         break;
     }
-    this.presence.emit(action, _.merge(defaultPresence, msg.presence));
+    this.presence.sendEvent(action, _.merge(defaultPresence, msg.presence));
   }
 
   /**
@@ -1042,6 +1046,9 @@ module.exports = class Presence extends EventEmitter {
     super();
     this.client = client;
     this.channel = channel;
+    // List of clients in the channel
+    this.clientsList = [];
+    this.loaded = false;
 
     this.events = {
       enter: 'enter',
@@ -1063,11 +1070,16 @@ module.exports = class Presence extends EventEmitter {
     }
     if (!this.client || !this.channel) return cb(new Error('Wrong usage of presence.get'));
 
+    if (this.loaded && !opts.forceReload) return cb(null, this.clientsList);
+
     this.client.connection.request('/room/' + this.channel, (err, data) => {
       if (err) return cb(err);
 
       try {
-        cb(null, JSON.parse(data));
+        data = JSON.parse(data);
+        this.clientsList = data;
+        this.loaded = true;
+        return cb(null, data);
       } catch (err) {
         cb(err);
       }
@@ -1080,6 +1092,67 @@ module.exports = class Presence extends EventEmitter {
   enter() {}
   // TODO: really needed ?
 
+
+  /**
+   * Will add a new client into list of clients
+   * @param {Object} data
+   */
+  addClient(data) {
+    if (!data || !data.clientId) return;
+
+    let found = false;
+    for (let i = 0; i < this.clientsList.length; i++) {
+      if (this.clientsList[i].clientId == data.clientId) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) this.clientsList.push(data);
+  }
+
+  /**
+   * Will remove client from list of clients
+   * @param {Object} data
+   */
+  removeClient(data) {
+    if (!data || !data.clientId) return;
+
+    for (let i = 0; i < this.clientsList.length; i++) {
+      if (this.clientsList[i].clientId == data.clientId) {
+        this.clientsList.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Will clear list of clients from presence
+   */
+  clearClients() {
+    this.clientsList = [];
+    this.loaded = false;
+  }
+
+  /**
+   * Will check current client list and update it if needed
+   * after that it will send event to other listeners
+   * @param {String} event
+   * @param {Object} data
+   */
+  sendEvent(event, data) {
+    switch (event) {
+
+      case this.events.enter:
+        this.addClient(data);
+        break;
+
+      case this.events.leave:
+        this.removeClient(data);
+        break;
+    }
+    this.emit(event, data);
+  }
 
   /**
    * Subscribe to presence events
@@ -21210,7 +21283,7 @@ module.exports={
         "spec": ">=6.0.0 <7.0.0",
         "type": "range"
       },
-      "/Users/KoS/Projects/upwork/dubtrack-ws-client/node_modules/browserify-sign"
+      "/Volumes/Repos/Coding/upwork/dubtrack/dubtrack-ws-client/node_modules/browserify-sign"
     ]
   ],
   "_from": "elliptic@>=6.0.0 <7.0.0",
@@ -21245,7 +21318,7 @@ module.exports={
   "_shasum": "e4c81e0829cf0a65ab70e998b8232723b5c1bc48",
   "_shrinkwrap": null,
   "_spec": "elliptic@^6.0.0",
-  "_where": "/Users/KoS/Projects/upwork/dubtrack-ws-client/node_modules/browserify-sign",
+  "_where": "/Volumes/Repos/Coding/upwork/dubtrack/dubtrack-ws-client/node_modules/browserify-sign",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -79977,7 +80050,7 @@ module.exports={
         "spec": ">=2.3.0 <2.4.0",
         "type": "range"
       },
-      "/Users/KoS/Projects/upwork/dubtrack-ws-client/node_modules/request"
+      "/Volumes/Repos/Coding/upwork/dubtrack/dubtrack-ws-client/node_modules/request"
     ]
   ],
   "_from": "tough-cookie@>=2.3.0 <2.4.0",
@@ -80011,7 +80084,7 @@ module.exports={
   "_shasum": "f081f76e4c85720e6c37a5faced737150d84072a",
   "_shrinkwrap": null,
   "_spec": "tough-cookie@~2.3.0",
-  "_where": "/Users/KoS/Projects/upwork/dubtrack-ws-client/node_modules/request",
+  "_where": "/Volumes/Repos/Coding/upwork/dubtrack/dubtrack-ws-client/node_modules/request",
   "author": {
     "name": "Jeremy Stashewsky",
     "email": "jstashewsky@salesforce.com"

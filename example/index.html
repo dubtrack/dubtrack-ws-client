@@ -1,4 +1,4 @@
-<script src="/client.js"></script>
+<script src="../bin/client.js"></script>
 <script>
 var socket = new SocketClient({
   host: 'wss://ws.dubtrack.fm',
@@ -6,7 +6,7 @@ var socket = new SocketClient({
 });
 
 function reattach(channel) {
-  channel.attach();
+  channel.attach();OB
   /* Example when using presence on the channel */
   channel.presence.enter();
 }
@@ -19,11 +19,6 @@ socket.connection.on('connected', () => {
     console.log(channel)
     reattach(channel);
   }
-  if (interval) {
-    clearInterval(interval)
-    interval = null
-  }
-
 
   window.channel = socket.channels.get('room:5845fb26b0b5bf0c00fb03cb')
   window.channel2 = socket.channels.get('test2')
