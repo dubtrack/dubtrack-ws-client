@@ -2,18 +2,24 @@
 (function (global){
 'use strict';
 
-const Connection = require('./lib/Connection');
-const Channels = require('./lib/Channels');
-const Message = require('./lib/Message');
-const Auth = require('./lib/Auth');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Connection = require('./lib/Connection');
+var Channels = require('./lib/Channels');
+var Message = require('./lib/Message');
+var Auth = require('./lib/Auth');
 
 /**
  * Socket client implementation
  * @type {SocketClient}
  */
-class SocketClient {
 
-  constructor(options) {
+var SocketClient = function () {
+  function SocketClient(options) {
+    _classCallCheck(this, SocketClient);
+
     /**
      * base connectin
      * @type {Connection}
@@ -37,56 +43,69 @@ class SocketClient {
   /**
    * Bind default actions for connection
    */
-  bindActions() {
-    this.connection.on('message', this.onMessage.bind(this));
-  }
 
-  /**
-   * Handle all messages
-   * Note that first handler will be in {@link Connection.onMessage()}
-   * And this method will be called only after it's validation
-   * So `msg` will be validated, parsed and contain `action` key
-   * otherwise `message` event wouldn't be fired from {@link Connection}
-   * @param {Object} msg
-   */
-  onMessage(msg) {
-    // handle message
-    switch (msg.action) {
 
-      case Message.ACTION.ERROR:
-        this.channels.handleError(msg);
-        this.auth.onError(msg);
-        break;
-
-      case Message.ACTION.ATTACHED:
-        this.channels.handleChannelAttach(msg);
-        break;
-
-      case Message.ACTION.DETACHED:
-        this.channels.handleChannelDetach(msg);
-        break;
-
-      case Message.ACTION.PRESENCE:
-        this.channels.handlePresence(msg);
-        break;
-
-      case Message.ACTION.MESSAGE:
-        this.channels.handleChannelMessage(msg);
-        break;
-
-      case Message.ACTION.TOKEN:
-        this.auth.onResponse(msg);
-        break;
+  _createClass(SocketClient, [{
+    key: 'bindActions',
+    value: function bindActions() {
+      this.connection.on('message', this.onMessage.bind(this));
     }
-  }
 
-  /**
-   * Close current connection
-   */
-  close() {
-    this.connection.close();
-  }
-}
+    /**
+     * Handle all messages
+     * Note that first handler will be in {@link Connection.onMessage()}
+     * And this method will be called only after it's validation
+     * So `msg` will be validated, parsed and contain `action` key
+     * otherwise `message` event wouldn't be fired from {@link Connection}
+     * @param {Object} msg
+     */
+
+  }, {
+    key: 'onMessage',
+    value: function onMessage(msg) {
+      // handle message
+      switch (msg.action) {
+
+        case Message.ACTION.ERROR:
+          this.channels.handleError(msg);
+          this.auth.onError(msg);
+          break;
+
+        case Message.ACTION.ATTACHED:
+          this.channels.handleChannelAttach(msg);
+          break;
+
+        case Message.ACTION.DETACHED:
+          this.channels.handleChannelDetach(msg);
+          break;
+
+        case Message.ACTION.PRESENCE:
+          this.channels.handlePresence(msg);
+          break;
+
+        case Message.ACTION.MESSAGE:
+          this.channels.handleChannelMessage(msg);
+          break;
+
+        case Message.ACTION.TOKEN:
+          this.auth.onResponse(msg);
+          break;
+      }
+    }
+
+    /**
+     * Close current connection
+     */
+
+  }, {
+    key: 'close',
+    value: function close() {
+      this.connection.close();
+    }
+  }]);
+
+  return SocketClient;
+}();
 
 global.SocketClient = SocketClient;
 module.exports = SocketClient;
@@ -95,17 +114,22 @@ module.exports = SocketClient;
 },{"./lib/Auth":2,"./lib/Channels":4,"./lib/Connection":5,"./lib/Message":6}],2:[function(require,module,exports){
 'use strict';
 
-const crypto = require('crypto');
-const _ = require('lodash');
-const Message = require('./Message');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var crypto = require('crypto');
+var _ = require('lodash');
+var Message = require('./Message');
 
 /**
  * Auth helepr
  * @type {Auth}
  */
-module.exports = class Auth {
+module.exports = function () {
+  function Auth(client) {
+    _classCallCheck(this, Auth);
 
-  constructor(client) {
     this.client = client;
     this.cb = {};
   }
@@ -114,73 +138,100 @@ module.exports = class Auth {
    * Get current clientId
    * @return {String}
    */
-  get clientId() {
-    return this.client.connection.clientId;
-  }
 
-  /**
-     * Generate random req identifier
-     */
-  generateReqId() {
-    return crypto.randomBytes(16).toString('hex');
-  }
 
-  /**
-     * Create new Token for client
-     * @param {Object} opts
-     * @param {Function} cb
-     */
-  createTokenRequest(opts, cb) {
-    cb = cb || _.noop;
-    if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
+  _createClass(Auth, [{
+    key: 'generateReqId',
 
-    const reqId = this.generateReqId();
-    this.cb[reqId] = cb;
-    this.client.connection.send(Message.tokenRequest(reqId, opts.clientId));
-  }
 
-  onResponse(message) {
-    if (!message || !message.reqId) return;
+    /**
+       * Generate random req identifier
+       */
+    value: function generateReqId() {
+      return crypto.randomBytes(16).toString('hex');
+    }
 
-    if (!_.isFunction(this.cb[message.reqId])) return;
+    /**
+       * Create new Token for client
+       * @param {Object} opts
+       * @param {Function} cb
+       */
 
-    this.cb[message.reqId](null, message);
-    delete this.cb[message.reqId];
-  }
+  }, {
+    key: 'createTokenRequest',
+    value: function createTokenRequest(opts, cb) {
+      cb = cb || _.noop;
+      if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
 
-  onError(message) {
-    if (!message || !message.reqId) return;
+      var reqId = this.generateReqId();
+      this.cb[reqId] = cb;
+      this.client.connection.send(Message.tokenRequest(reqId, opts.clientId));
+    }
+  }, {
+    key: 'onResponse',
+    value: function onResponse(message) {
+      if (!message || !message.reqId) return;
 
-    if (!_.isFunction(this.cb[message.reqId])) return;
+      if (!_.isFunction(this.cb[message.reqId])) return;
 
-    this.cb[message.reqId](message);
-    delete this.cb[message.reqId];
-  }
-};
+      this.cb[message.reqId](null, message);
+      delete this.cb[message.reqId];
+    }
+  }, {
+    key: 'onError',
+    value: function onError(message) {
+      if (!message || !message.reqId) return;
+
+      if (!_.isFunction(this.cb[message.reqId])) return;
+
+      this.cb[message.reqId](message);
+      delete this.cb[message.reqId];
+    }
+  }, {
+    key: 'clientId',
+    get: function get() {
+      return this.client.connection.clientId;
+    }
+  }]);
+
+  return Auth;
+}();
 
 },{"./Message":6,"crypto":86,"lodash":195}],3:[function(require,module,exports){
 'use strict';
 
-const EventEmitter = require('events');
-const _ = require('lodash');
-const Message = require('./Message');
-const Presence = require('./Presence');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EventEmitter = require('events');
+var _ = require('lodash');
+var Message = require('./Message');
+var Presence = require('./Presence');
 
 /**
  * Channel instance
  * @type {Channel}
  */
-module.exports = class Channel extends EventEmitter {
+module.exports = function (_EventEmitter) {
+  _inherits(Channel, _EventEmitter);
 
   /**
    * Create a new channel
    * @param {SocketClient} client
    * @param {String} name
    */
-  constructor(client, name) {
-    super();
-    this.presence = new Presence(client, name);
-    this.states = {
+  function Channel(client, name) {
+    _classCallCheck(this, Channel);
+
+    var _this = _possibleConstructorReturn(this, (Channel.__proto__ || Object.getPrototypeOf(Channel)).call(this));
+
+    _this.presence = new Presence(client, name);
+    _this.states = {
       initialized: 'initialized',
       attaching: 'attaching',
       attached: 'attached',
@@ -188,193 +239,231 @@ module.exports = class Channel extends EventEmitter {
       detached: 'detached',
       failed: 'failed'
     };
-    this.events = [];
-    this.state = this.states.initialized;
-    this.client = client;
-    this.name = name;
+    _this.events = [];
+    _this.state = _this.states.initialized;
+    _this.client = client;
+    _this.name = name;
 
     // bind disconnect handler
-    client.connection.on('disconnected', this.onDisconnected.bind(this));
+    client.connection.on('disconnected', _this.onDisconnected.bind(_this));
+    return _this;
   }
 
   /**
    * Will bind list of event to handle disconnect
    */
-  onDisconnected() {
-    if (this.presence) this.presence.clearClients();
 
-    this.setState(this.states.disconnected);
-  }
 
-  /**
-   * Set channel state
-   */
-  setState(state) {
-    this.state = state;
-    this.emit(state);
-  }
+  _createClass(Channel, [{
+    key: 'onDisconnected',
+    value: function onDisconnected() {
+      if (this.presence) this.presence.clearClients();
 
-  /**
-   * Attach to channel
-   * @param {Function} cb
-   */
-  attach(cb) {
-    cb = cb || _.noop;
-    if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
-
-    if (this.state === this.states.attached) return cb();
-
-    this.setState(this.states.attaching);
-    this.once(this.states.attached, msg => {
-      this.state = this.states.attached;
-      cb();
-    });
-    this.client.connection.send(Message.attachChannel(this.name));
-  }
-
-  /**
-   * Detach from channel
-   * @param {Function} cb
-   */
-  detach(cb) {
-    cb = cb || _.noop;
-    if (this.presence) this.presence.clearClients();
-
-    if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
-
-    if (this.state === this.states.detached) return cb();
-
-    this.setState(this.states.detaching);
-    this.once(this.states.detached, msg => {
-      this.state = this.states.detached;
-      cb();
-    });
-    this.client.connection.send(Message.leaveChannel(this.name));
-    // TODO: remove all listeners from Channel
-  }
-
-  /**
-   * Subscribe to channel messages (events)
-   * @param {String} event
-   * @param {Function} listener
-   */
-  subscribe(event, listener) {
-    if (_.isFunction(event)) {
-      listener = event;
-      event = '*';
+      this.setState(this.states.disconnected);
     }
-    // Check for already binded
-    if (~this.events.indexOf(event)) return;
 
-    this.on('message:' + event, listener);
-    this.events.push(event);
-    // Check and try to attach
-    if (this.state !== this.states.attached) this.attach();
-  }
+    /**
+     * Set channel state
+     */
 
-  /**
-   * Will fire presence event for channel
-   * @param {Object} msg
-   */
-  firePresence(msg) {
-    if (!msg.presence) return;
-
-    const defaultPresence = {
-      clientId: '',
-      data: {}
-    };
-    msg.presence.action = msg.presence.action || Message.PRESENCE.ENTER;
-    let action = 'enter';
-    switch (msg.presence.action) {
-      case Message.PRESENCE.LEAVE:
-        action = 'leave';
-        break;
-
-      case Message.PRESENCE.UPDATE:
-        action = 'update';
-        break;
+  }, {
+    key: 'setState',
+    value: function setState(state) {
+      this.state = state;
+      this.emit(state);
     }
-    this.presence.sendEvent(action, _.merge(defaultPresence, msg.presence));
-  }
 
-  /**
-   * Will fire message to this channel
-   * @param {Object} msg
-   */
-  fireMessage(msg) {
-    if (!msg.message) return;
+    /**
+     * Attach to channel
+     * @param {Function} cb
+     */
 
-    const message = msg.message;
-    if (message.type == Message.MSG_TYPE.JSON) {
+  }, {
+    key: 'attach',
+    value: function attach(cb) {
+      var _this2 = this;
+
+      cb = cb || _.noop;
+      if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
+
+      if (this.state === this.states.attached) return cb();
+
+      this.setState(this.states.attaching);
+      this.once(this.states.attached, function (msg) {
+        _this2.state = _this2.states.attached;
+        cb();
+      });
+      this.client.connection.send(Message.attachChannel(this.name));
+    }
+
+    /**
+     * Detach from channel
+     * @param {Function} cb
+     */
+
+  }, {
+    key: 'detach',
+    value: function detach(cb) {
+      var _this3 = this;
+
+      cb = cb || _.noop;
+      if (this.presence) this.presence.clearClients();
+
+      if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection'));
+
+      if (this.state === this.states.detached) return cb();
+
+      this.setState(this.states.detaching);
+      this.once(this.states.detached, function (msg) {
+        _this3.state = _this3.states.detached;
+        cb();
+      });
+      this.client.connection.send(Message.leaveChannel(this.name));
+      // TODO: remove all listeners from Channel
+    }
+
+    /**
+     * Subscribe to channel messages (events)
+     * @param {String} event
+     * @param {Function} listener
+     */
+
+  }, {
+    key: 'subscribe',
+    value: function subscribe(event, listener) {
+      if (_.isFunction(event)) {
+        listener = event;
+        event = '*';
+      }
+      // Check for already binded
+      if (~this.events.indexOf(event)) return;
+
+      this.on('message:' + event, listener);
+      this.events.push(event);
+      // Check and try to attach
+      if (this.state !== this.states.attached) this.attach();
+    }
+
+    /**
+     * Will fire presence event for channel
+     * @param {Object} msg
+     */
+
+  }, {
+    key: 'firePresence',
+    value: function firePresence(msg) {
+      if (!msg.presence) return;
+
+      var defaultPresence = {
+        clientId: '',
+        data: {}
+      };
+      msg.presence.action = msg.presence.action || Message.PRESENCE.ENTER;
+      var action = 'enter';
+      switch (msg.presence.action) {
+        case Message.PRESENCE.LEAVE:
+          action = 'leave';
+          break;
+
+        case Message.PRESENCE.UPDATE:
+          action = 'update';
+          break;
+      }
+      this.presence.sendEvent(action, _.merge(defaultPresence, msg.presence));
+    }
+
+    /**
+     * Will fire message to this channel
+     * @param {Object} msg
+     */
+
+  }, {
+    key: 'fireMessage',
+    value: function fireMessage(msg) {
+      if (!msg.message) return;
+
+      var message = msg.message;
+      if (message.type == Message.MSG_TYPE.JSON) {
+        try {
+          message.data = JSON.parse(message.data);
+        } catch (err) {
+          // Ignore ?
+        }
+      }
+      var event = message.name || '*';
+      if (event != '*') {
+        // send special event
+        this.emit('message:' + event, message);
+      }
+      this.emit('message:*', message);
+    }
+
+    /**
+     * Send message to channel
+     * @param {String} event
+     * @param {Object|String} message
+     * @param {Function} cb
+     */
+
+  }, {
+    key: 'publish',
+    value: function publish(event, message, cb) {
+      cb = cb || _.noop;
+      if (!event) return cb(new Error('No event or message given'));
+
+      if (_.isFunction(message)) {
+        cb = message;
+        message = event;
+        event = message.name || '*';
+        if (_.isObject(message) && message.data) {
+          message = message.data;
+        }
+      }
+
+      if (_.isObject(event) || _.isArray(event)) {
+        message = event;
+        event = message.name || '*';
+      }
+
+      if (_.isString(event) && !message) {
+        message = event;
+        event = message.name || '*';
+      }
+
+      // if (this.state != this.states.attached)
+      //   return cb(new Error('You are not attached to channel'))
+
+      if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection exist'));
+
       try {
-        message.data = JSON.parse(message.data);
+        this.client.connection.send(Message.channelMessage(this.name, message, event));
+        cb();
       } catch (err) {
-        // Ignore ?
+        cb(err);
       }
     }
-    const event = message.name || '*';
-    if (event != '*') {
-      // send special event
-      this.emit('message:' + event, message);
-    }
-    this.emit('message:*', message);
-  }
+  }]);
 
-  /**
-   * Send message to channel
-   * @param {String} event
-   * @param {Object|String} message
-   * @param {Function} cb
-   */
-  publish(event, message, cb) {
-    cb = cb || _.noop;
-    if (!event) return cb(new Error('No event or message given'));
-
-    if (_.isFunction(message)) {
-      cb = message;
-      message = event;
-      event = message.name || '*';
-      if (_.isObject(message) && message.data) {
-        message = message.data;
-      }
-    }
-
-    if (_.isObject(event) || _.isArray(event)) {
-      message = event;
-      event = message.name || '*';
-    }
-
-    if (_.isString(event) && !message) {
-      message = event;
-      event = message.name || '*';
-    }
-
-    // if (this.state != this.states.attached)
-    //   return cb(new Error('You are not attached to channel'))
-
-    if (!this.client || !this.client.connection.isConnected()) return cb(new Error('No connection exist'));
-
-    try {
-      this.client.connection.send(Message.channelMessage(this.name, message, event));
-      cb();
-    } catch (err) {
-      cb(err);
-    }
-  }
-};
+  return Channel;
+}(EventEmitter);
 
 },{"./Message":6,"./Presence":8,"events":132,"lodash":195}],4:[function(require,module,exports){
 'use strict';
 
-const Channel = require('./Channel');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Channel = require('./Channel');
 
 /**
  * Socket channels
  * @type {Channels}
  */
-module.exports = class Channels {
+module.exports = function () {
+  function Channels(client) {
+    _classCallCheck(this, Channels);
 
-  constructor(client) {
     this.client = client;
 
     this.all = {};
@@ -385,103 +474,137 @@ module.exports = class Channels {
    * @param {String} name
    * @return {Channel}
    */
-  get(name) {
-    if (!name) return;
 
-    name = String(name);
-    let channel = this.all[name];
-    if (!channel) channel = this.all[name] = new Channel(this.client, name);
 
-    return channel;
-  }
+  _createClass(Channels, [{
+    key: 'get',
+    value: function get(name) {
+      if (!name) return;
 
-  /**
-   * Release channel
-   * @param {String} name
-   */
-  release(name) {
-    if (!name) return;
-    const channel = this.all[name];
-    if (channel) delete this.all[name];
-  }
+      name = String(name);
+      var channel = this.all[name];
+      if (!channel) channel = this.all[name] = new Channel(this.client, name);
 
-  /**
-   * Handle user attached channel
-   * @param {Object} msg
-   */
-  handleChannelAttach(msg) {
-    if (!msg.channel || !this.all[msg.channel]) return;
+      return channel;
+    }
 
-    const channel = this.get(msg.channel);
-    if (!channel) return;
+    /**
+     * Release channel
+     * @param {String} name
+     */
 
-    channel.emit(channel.states.attached, msg);
-  }
+  }, {
+    key: 'release',
+    value: function release(name) {
+      if (!name) return;
+      var channel = this.all[name];
+      if (channel) delete this.all[name];
+    }
 
-  /**
-   * Handle user detached channel
-   * @param {Object} msg
-   */
-  handleChannelDetach(msg) {
-    if (!msg.channel || !this.all[msg.channel]) return;
+    /**
+     * Handle user attached channel
+     * @param {Object} msg
+     */
 
-    const channel = this.get(msg.channel);
-    if (!channel) return;
+  }, {
+    key: 'handleChannelAttach',
+    value: function handleChannelAttach(msg) {
+      if (!msg.channel || !this.all[msg.channel]) return;
 
-    channel.emit(channel.states.detached, msg);
-  }
+      var channel = this.get(msg.channel);
+      if (!channel) return;
 
-  /**
-   * Handle message from server
-   * @param {Object} msg
-   */
-  handleChannelMessage(msg) {
-    if (!msg.channel || !this.all[msg.channel]) return;
+      channel.emit(channel.states.attached, msg);
+    }
 
-    const channel = this.get(msg.channel);
-    if (!channel) return;
+    /**
+     * Handle user detached channel
+     * @param {Object} msg
+     */
 
-    channel.fireMessage(msg);
-  }
+  }, {
+    key: 'handleChannelDetach',
+    value: function handleChannelDetach(msg) {
+      if (!msg.channel || !this.all[msg.channel]) return;
 
-  /**
-   * Handle presence message
-   * @param {Object} msg
-   */
-  handlePresence(msg) {
-    if (!msg.channel || !this.all[msg.channel]) return;
+      var channel = this.get(msg.channel);
+      if (!channel) return;
 
-    const channel = this.get(msg.channel);
-    if (!channel) return;
+      channel.emit(channel.states.detached, msg);
+    }
 
-    channel.firePresence(msg);
-  }
-};
+    /**
+     * Handle message from server
+     * @param {Object} msg
+     */
+
+  }, {
+    key: 'handleChannelMessage',
+    value: function handleChannelMessage(msg) {
+      if (!msg.channel || !this.all[msg.channel]) return;
+
+      var channel = this.get(msg.channel);
+      if (!channel) return;
+
+      channel.fireMessage(msg);
+    }
+
+    /**
+     * Handle presence message
+     * @param {Object} msg
+     */
+
+  }, {
+    key: 'handlePresence',
+    value: function handlePresence(msg) {
+      if (!msg.channel || !this.all[msg.channel]) return;
+
+      var channel = this.get(msg.channel);
+      if (!channel) return;
+
+      channel.firePresence(msg);
+    }
+  }]);
+
+  return Channels;
+}();
 
 },{"./Channel":3}],5:[function(require,module,exports){
 'use strict';
 
-const EventEmitter = require('events');
-const eio = require('engine.io-client');
-const _ = require('lodash');
-const MessageMaster = require('./MessageMaster');
-const Message = require('./Message');
-const request = require('request');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EventEmitter = require('events');
+var eio = require('engine.io-client');
+var _ = require('lodash');
+var MessageMaster = require('./MessageMaster');
+var Message = require('./Message');
+var _request = require('request');
 
 /**
  * Base SocketClient Connection
  * @type {Connection}
  */
-module.exports = class Connection extends EventEmitter {
+module.exports = function (_EventEmitter) {
+  _inherits(Connection, _EventEmitter);
 
   /**
    *
    * @param {SocketClient}
    */
-  constructor(client, options) {
-    super();
-    this.client = client;
-    this.states = {
+  function Connection(client, options) {
+    _classCallCheck(this, Connection);
+
+    var _this = _possibleConstructorReturn(this, (Connection.__proto__ || Object.getPrototypeOf(Connection)).call(this));
+
+    _this.client = client;
+    _this.states = {
       initialized: 'initialized',
       connecting: 'connecting',
       connected: 'connected',
@@ -490,269 +613,312 @@ module.exports = class Connection extends EventEmitter {
       closed: 'closed',
       failed: 'failed'
     };
-    this.secure = options.secure || false;
-    this.state = this.states.initialized;
+    _this.secure = options.secure || false;
+    _this.state = _this.states.initialized;
     // client id
-    this.clientId = options.clientId || '';
+    _this.clientId = options.clientId || '';
     // Store auth info
-    this.secret = options.secret || null;
-    this.token = options.token || null;
+    _this.secret = options.secret || null;
+    _this.token = options.token || null;
     // Default options for websocket connection
-    this.defaultOpts = {
+    _this.defaultOpts = {
       path: '/ws',
       transports: ['websocket', 'polling']
       // transports: ['websocket']
     };
     if (!options.secret && !options.token && !options.authCallback) throw new Error('No auth keys passed');
 
-    this.host = options.host || 'localhost:8081';
-    if (this.host.indexOf('wss://') == 0) {
-      this.secure = true;
-      this.host = this.host.replace('wss://', '');
+    _this.host = options.host || 'localhost:8081';
+    if (_this.host.indexOf('wss://') == 0) {
+      _this.secure = true;
+      _this.host = _this.host.replace('wss://', '');
     }
 
-    const prefix = this.secure ? 'wss://' : 'ws://';
-    this.url = prefix + this.host + '?connect=1';
-    if (this.secret) this.url += '&secret=' + options.secret;
+    var prefix = _this.secure ? 'wss://' : 'ws://';
+    _this.url = prefix + _this.host + '?connect=1';
+    if (_this.secret) _this.url += '&secret=' + options.secret;
 
-    if (this.token) this.url += '&access_token=' + options.token;
+    if (_this.token) _this.url += '&access_token=' + options.token;
 
     if (_.isFunction(options.authCallback)) {
       options.noAutoConnect = true;
-      options.authCallback({}, (err, tokenOrData) => {
-        if (err) return this.fail(err);
+      options.authCallback({}, function (err, tokenOrData) {
+        if (err) return _this.fail(err);
 
         if (_.isString(tokenOrData)) {
           // It's token
-          this.url += '&access_token=' + tokenOrData;
-          this.token = tokenOrData;
+          _this.url += '&access_token=' + tokenOrData;
+          _this.token = tokenOrData;
         }
         if (_.isObject(tokenOrData) && tokenOrData.token) {
-          this.url += '&access_token=' + tokenOrData.token;
-          this.token = tokenOrData.token;
+          _this.url += '&access_token=' + tokenOrData.token;
+          _this.token = tokenOrData.token;
         }
 
-        if (!this.token) return this.fail('No token received');
+        if (!_this.token) return _this.fail('No token received');
 
-        this.connect();
+        _this.connect();
       });
     }
 
-    this.options = _.merge(this.defaultOpts, options);
-    this.socket = null;
+    _this.options = _.merge(_this.defaultOpts, options);
+    _this.socket = null;
 
     // Reconnect section
-    this.reconnectTimeout = null;
-    if (!_.isNumber(this.options.retriesAmount)) this.options.retriesAmount = 7;
+    _this.reconnectTimeout = null;
+    if (!_.isNumber(_this.options.retriesAmount)) _this.options.retriesAmount = 7;
 
-    if (!_.isBoolean(this.options.autoReconnect)) this.options.autoReconnect = true;
+    if (!_.isBoolean(_this.options.autoReconnect)) _this.options.autoReconnect = true;
     // no reconnections
-    this.currentRetries = 0;
+    _this.currentRetries = 0;
 
-    if (!this.options.noAutoConnect) this.connect();
+    if (!_this.options.noAutoConnect) _this.connect();
+    return _this;
   }
 
   /**
    * Mark connection as failed
    * @param {Error|Object|String} err
    */
-  fail(err) {
-    this.state = this.states.failed;
-    this.emit(this.state, err || 'Something wrong');
-  }
 
-  /**
-   * Check is connected
-   */
-  isConnected() {
-    return this.state === this.states.connected;
-  }
 
-  /**
-   * Close connection
-   */
-  close() {
-    this.state = this.states.closing;
-    this.emit(this.states.closing);
-    this.socket.close();
-    // TODO: needed ?
-    this.removeAllListeners();
-  }
-
-  onClose(force) {
-    if (this.state == this.states.closing) {
-      this.state = this.states.closed;
-      this.emit(this.states.closed);
-    } else {
-      this.state = this.states.disconnected;
-      this.emit(this.states.disconnected);
-      // Need to reconnect only on disconnect
-      this._setupReconnect();
-    }
-  }
-
-  /**
-   * Will set up reconnect timeout
-   */
-  _setupReconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-
-    if (!this.options.autoReconnect) return;
-
-    if (this.currentRetries >= this.options.retriesAmount) return;
-
-    if (this.isConnected()) {
-      this.currentRetries = 0;
-      return;
-    }
-
-    if (this.state !== this.states.connecting && this.state !== this.states.connected) {
-      this.currentRetries++; // increase amount of retries
-      this.connect();
-    }
-
-    this.reconnectTimeout = setTimeout(this._setupReconnect.bind(this), 1000);
-  }
-
-  /**
-   * Remove all socket listeners
-   */
-  clearSocketListeners() {
-    if (!this.socket) return;
-
-    this.socket.removeAllListeners('close');
-    this.socket.removeAllListeners('error');
-    this.socket.removeAllListeners('message');
-  }
-
-  /**
-   * Open ws handler
-   */
-  onOpen() {
-    if (!this.socket) return;
-
-    this.currentRetries = 0;
-    this.clearSocketListeners();
-    this.socket.on('close', this.onClose.bind(this));
-    this.socket.on('error', this.onError.bind(this));
-    this.socket.on('message', this.onMessage.bind(this));
-  }
-
-  /**
-   * Error handler
-   * @param {Error|String} err
-   */
-  onError(err) {
-    if (this.state == this.states.connecting) {
+  _createClass(Connection, [{
+    key: 'fail',
+    value: function fail(err) {
       this.state = this.states.failed;
-      this.emit(this.state);
-    } else {
-      this.emit('error', err);
+      this.emit(this.state, err || 'Something wrong');
     }
-  }
 
-  /**
-   * Will handle all messages
-   * @param {String} data
-   */
-  onMessage(data) {
-    if (_.isString(data)) data = MessageMaster.parse(data);
+    /**
+     * Check is connected
+     */
 
-    if (!data.action) return;
-
-    switch (data.action) {
-
-      case Message.ACTION.CONNECTED:
-        // Update clientId
-        if (data.clientId) this.clientId = data.clientId;
-
-        this.state = this.states.connected;
-        this.emit(this.states.connected);
-        break;
-
-      default:
-        this.emit('message', data);
+  }, {
+    key: 'isConnected',
+    value: function isConnected() {
+      return this.state === this.states.connected;
     }
-  }
 
-  /**
-   * Open a new connection to server
-   */
-  connect() {
-    if (this.state == this.states.connected && this.socket.readyState == 'open') return;
+    /**
+     * Close connection
+     */
 
-    this.state = this.states.connecting;
-    this.socket = eio(this.url, this.options);
-    this.socket.removeAllListeners('open');
-    this.socket.removeAllListeners('error');
-    this.socket.once('open', this.onOpen.bind(this));
-    this.socket.once('error', err => {
-      if (err && err.type == 'TransportError') this.fail(err);
-    });
-  }
+  }, {
+    key: 'close',
+    value: function close() {
+      this.state = this.states.closing;
+      this.emit(this.states.closing);
+      this.socket.close();
+      // TODO: needed ?
+      this.removeAllListeners();
+    }
+  }, {
+    key: 'onClose',
+    value: function onClose(force) {
+      if (this.state == this.states.closing) {
+        this.state = this.states.closed;
+        this.emit(this.states.closed);
+      } else {
+        this.state = this.states.disconnected;
+        this.emit(this.states.disconnected);
+        // Need to reconnect only on disconnect
+        this._setupReconnect();
+      }
+    }
 
-  /**
-   * Send message to server
-   */
-  send(message) {
-    if (_.isObject(message)) message = MessageMaster.stringify(message);
+    /**
+     * Will set up reconnect timeout
+     */
 
-    this.socket.send(message);
-  }
+  }, {
+    key: '_setupReconnect',
+    value: function _setupReconnect() {
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
 
-  /**
-   * Get url to call using REST
-   * @param {?String} postfix additional url
-   */
-  getRestUrl(postfix) {
-    if (!this.host) return 'http://localhost:8081';
+      if (!this.options.autoReconnect) return;
 
-    if (postfix && postfix[0] != '/') postfix = '/' + postfix;
+      if (this.currentRetries >= this.options.retriesAmount) return;
 
-    const prefix = this.secure ? 'https' : 'http';
-    return prefix + '://' + this.host + postfix;
-  }
+      if (this.isConnected()) {
+        this.currentRetries = 0;
+        return;
+      }
 
-  /**
-   * Make an http request
-   * @param {String} url
-   * @param {Function} cb
-   */
-  request(url, cb) {
-    cb = cb || _.noop;
-    if (!url) return cb(new Error('No url given'));
+      if (this.state !== this.states.connecting && this.state !== this.states.connected) {
+        this.currentRetries++; // increase amount of retries
+        this.connect();
+      }
 
-    const headers = {};
-    if (this.secret) headers['X-Sectet'] = this.secret;
+      this.reconnectTimeout = setTimeout(this._setupReconnect.bind(this), 1000);
+    }
 
-    if (this.token) headers['X-Access-Token'] = this.token;
+    /**
+     * Remove all socket listeners
+     */
 
-    const options = {
-      url: this.getRestUrl(url),
-      headers: headers
-    };
-    request.get(options, function (error, response, body) {
-      if (error || response.statusCode != 200) return cb(error || body);
+  }, {
+    key: 'clearSocketListeners',
+    value: function clearSocketListeners() {
+      if (!this.socket) return;
 
-      cb(null, body);
-    });
-  }
+      this.socket.removeAllListeners('close');
+      this.socket.removeAllListeners('error');
+      this.socket.removeAllListeners('message');
+    }
 
-};
+    /**
+     * Open ws handler
+     */
+
+  }, {
+    key: 'onOpen',
+    value: function onOpen() {
+      if (!this.socket) return;
+
+      this.currentRetries = 0;
+      this.clearSocketListeners();
+      this.socket.on('close', this.onClose.bind(this));
+      this.socket.on('error', this.onError.bind(this));
+      this.socket.on('message', this.onMessage.bind(this));
+    }
+
+    /**
+     * Error handler
+     * @param {Error|String} err
+     */
+
+  }, {
+    key: 'onError',
+    value: function onError(err) {
+      if (this.state == this.states.connecting) {
+        this.state = this.states.failed;
+        this.emit(this.state);
+      } else {
+        this.emit('error', err);
+      }
+    }
+
+    /**
+     * Will handle all messages
+     * @param {String} data
+     */
+
+  }, {
+    key: 'onMessage',
+    value: function onMessage(data) {
+      if (_.isString(data)) data = MessageMaster.parse(data);
+
+      if (!data.action) return;
+
+      switch (data.action) {
+
+        case Message.ACTION.CONNECTED:
+          // Update clientId
+          if (data.clientId) this.clientId = data.clientId;
+
+          this.state = this.states.connected;
+          this.emit(this.states.connected);
+          break;
+
+        default:
+          this.emit('message', data);
+      }
+    }
+
+    /**
+     * Open a new connection to server
+     */
+
+  }, {
+    key: 'connect',
+    value: function connect() {
+      var _this2 = this;
+
+      if (this.state == this.states.connected && this.socket.readyState == 'open') return;
+
+      this.state = this.states.connecting;
+      this.socket = eio(this.url, this.options);
+      this.socket.removeAllListeners('open');
+      this.socket.removeAllListeners('error');
+      this.socket.once('open', this.onOpen.bind(this));
+      this.socket.once('error', function (err) {
+        if (err && err.type == 'TransportError') _this2.fail(err);
+      });
+    }
+
+    /**
+     * Send message to server
+     */
+
+  }, {
+    key: 'send',
+    value: function send(message) {
+      if (_.isObject(message)) message = MessageMaster.stringify(message);
+
+      this.socket.send(message);
+    }
+
+    /**
+     * Get url to call using REST
+     * @param {?String} postfix additional url
+     */
+
+  }, {
+    key: 'getRestUrl',
+    value: function getRestUrl(postfix) {
+      if (!this.host) return 'http://localhost:8081';
+
+      if (postfix && postfix[0] != '/') postfix = '/' + postfix;
+
+      var prefix = this.secure ? 'https' : 'http';
+      return prefix + '://' + this.host + postfix;
+    }
+
+    /**
+     * Make an http request
+     * @param {String} url
+     * @param {Function} cb
+     */
+
+  }, {
+    key: 'request',
+    value: function request(url, cb) {
+      cb = cb || _.noop;
+      if (!url) return cb(new Error('No url given'));
+
+      var headers = {};
+      if (this.secret) headers['X-Sectet'] = this.secret;
+
+      if (this.token) headers['X-Access-Token'] = this.token;
+
+      var options = {
+        url: this.getRestUrl(url),
+        headers: headers
+      };
+      _request.get(options, function (error, response, body) {
+        if (error || response.statusCode != 200) return cb(error || body);
+
+        cb(null, body);
+      });
+    }
+  }]);
+
+  return Connection;
+}(EventEmitter);
 
 },{"./Message":6,"./MessageMaster":7,"engine.io-client":120,"events":132,"lodash":195,"request":256}],6:[function(require,module,exports){
 'use strict';
 
-const _ = require('lodash');
+var _ = require('lodash');
 
 /**
  * Base Messages for socket app
  * @type {Message}
  */
-const Message = {
+var Message = {
 
   /**
    * Message action
@@ -803,7 +969,7 @@ const Message = {
    * @param {Error|String} err
    * @param {?Object} [data]
    */
-  error(err, data) {
+  error: function error(err, data) {
     if (_.isObject(err) && err.message) err = err.message;
 
     return _.merge({
@@ -812,16 +978,18 @@ const Message = {
     }, data || {});
   },
 
+
   /**
    * Send connected data
    * @param {Object} data any additional data you want to send
    * @return {Object}
    */
-  connected(data) {
+  connected: function connected(data) {
     if (!_.isPlainObject(data)) data = {};
 
     return _.merge(data, { action: this.ACTION.CONNECTED });
   },
+
 
   /**
    * Create get channel message
@@ -829,7 +997,7 @@ const Message = {
    * @param {String} channel
    * @return {Object}
    */
-  attachChannel(channel) {
+  attachChannel: function attachChannel(channel) {
     if (!channel) throw new Error('No channel passed');
 
     return {
@@ -838,19 +1006,21 @@ const Message = {
     };
   },
 
+
   /**
    * User leaves channel
    * @throws {Error}
    * @param {String} channel
    * @return {Object}
    */
-  leaveChannel(channel) {
+  leaveChannel: function leaveChannel(channel) {
     if (!channel) throw new Error('No channel passed');
     return {
       action: this.ACTION.DETACH,
       channel: channel
     };
   },
+
 
   /**
    * Create attached to channel message
@@ -859,7 +1029,7 @@ const Message = {
    * @param {String} channel
    * @return {Object}
    */
-  attached(client, channel) {
+  attached: function attached(client, channel) {
     if (!client || !channel) throw new Error('No client or channel passed');
 
     return {
@@ -870,6 +1040,7 @@ const Message = {
     };
   },
 
+
   /**
    * User left channel message
    * @throws {Error}
@@ -877,7 +1048,7 @@ const Message = {
    * @param {String} channel
    * @return {Object}
    */
-  detached(client, channel) {
+  detached: function detached(client, channel) {
     if (!client || !channel) throw new Error('No client or channel passed');
 
     return {
@@ -888,15 +1059,17 @@ const Message = {
     };
   },
 
+
   /**
    * Simple pong message
    * @return {Object}
    */
-  pong() {
+  pong: function pong() {
     return {
       action: this.ACTION.HEARTBEAT
     };
   },
+
 
   /**
    * Presence message
@@ -907,7 +1080,7 @@ const Message = {
    * @param {?Number} [action] enter by default
    * @return {Object}
    */
-  presence(client, channel, action) {
+  presence: function presence(client, channel, action) {
     if (!client || !channel) throw new Error('No client or channel passed');
 
     action = action || this.PRESENCE.ENTER;
@@ -923,6 +1096,7 @@ const Message = {
     };
   },
 
+
   /**
    * Send message to channel
    * @see {Message.MSG_TYPE}
@@ -932,10 +1106,10 @@ const Message = {
    * @param {String} event
    * @return {*}
    */
-  channelMessage(channel, message, event) {
+  channelMessage: function channelMessage(channel, message, event) {
     if (!channel || !message) throw new Error('No channel or message passed');
 
-    let type = this.MSG_TYPE.STRING;
+    var type = this.MSG_TYPE.STRING;
     if (_.isObject(message) || _.isArray(message)) {
       message = JSON.stringify(message);
       type = this.MSG_TYPE.JSON;
@@ -952,19 +1126,21 @@ const Message = {
     };
   },
 
+
   /**
    * Create token request
    * @param {?String} reqId
    * @param {?String} clientId
    * @return {Object}
    */
-  tokenRequest(reqId, clientId) {
+  tokenRequest: function tokenRequest(reqId, clientId) {
     return {
       action: this.ACTION.TOKEN,
       clientId: clientId || '',
       reqId: reqId || ''
     };
   },
+
 
   /**
    * Create token request
@@ -973,10 +1149,10 @@ const Message = {
    * @param {?String} clientId
    * @return {Object}
    */
-  token(token, reqId, clientId) {
+  token: function token(_token, reqId, clientId) {
     return {
       action: this.ACTION.TOKEN,
-      token: token,
+      token: _token,
       clientId: clientId || '',
       reqId: reqId || ''
     };
@@ -988,20 +1164,20 @@ module.exports = Message;
 },{"lodash":195}],7:[function(require,module,exports){
 'use strict';
 
-const _ = require('lodash');
+var _ = require('lodash');
 
 /**
  * Message Master
  * @type {MessageMaster}
  */
-const MessageMaster = {
+var MessageMaster = {
 
   /**
    * Parse an incoming message
    * @param {String} message
    * @return {Object}
    */
-  parse(message) {
+  parse: function parse(message) {
     if (!_.isString(message)) return message;
 
     try {
@@ -1011,13 +1187,14 @@ const MessageMaster = {
     }
   },
 
+
   /**
    * Stringify given message object
    * @throws Error
    * @param {Object} message
    * @return {String}
    */
-  stringify(message) {
+  stringify: function stringify(message) {
     if (_.isString(message)) return message;
 
     return JSON.stringify(message);
@@ -1029,32 +1206,45 @@ module.exports = MessageMaster;
 },{"lodash":195}],8:[function(require,module,exports){
 'use strict';
 
-const EventEmitter = require('events');
-const _ = require('lodash');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EventEmitter = require('events');
+var _ = require('lodash');
 
 /**
  * Presence manager
  * @type {Presence}
  */
-module.exports = class Presence extends EventEmitter {
+module.exports = function (_EventEmitter) {
+  _inherits(Presence, _EventEmitter);
 
   /**
    * @param {SocketClient} client
    * @param {String} channel
    */
-  constructor(client, channel) {
-    super();
-    this.client = client;
-    this.channel = channel;
-    // List of clients in the channel
-    this.clientsList = [];
-    this.loaded = false;
+  function Presence(client, channel) {
+    _classCallCheck(this, Presence);
 
-    this.events = {
+    var _this = _possibleConstructorReturn(this, (Presence.__proto__ || Object.getPrototypeOf(Presence)).call(this));
+
+    _this.client = client;
+    _this.channel = channel;
+    // List of clients in the channel
+    _this.clientsList = [];
+    _this.loaded = false;
+
+    _this.events = {
       enter: 'enter',
       leave: 'leave',
       update: 'update'
     };
+    return _this;
   }
 
   /**
@@ -1062,114 +1252,145 @@ module.exports = class Presence extends EventEmitter {
    * @param {?Object} [opts]
    * @param {Function} cb
    */
-  get(opts, cb) {
-    cb = cb || _.noop;
-    if (_.isFunction(opts)) {
-      cb = opts;
-      opts = {};
-    }
-    if (!this.client || !this.channel) return cb(new Error('Wrong usage of presence.get'));
 
-    if (this.loaded && !opts.forceReload) return cb(null, this.clientsList);
 
-    this.client.connection.request('/room/' + this.channel, (err, data) => {
-      if (err) return cb(err);
+  _createClass(Presence, [{
+    key: 'get',
+    value: function get(opts, cb) {
+      var _this2 = this;
 
-      try {
-        data = JSON.parse(data);
-        this.clientsList = data;
-        this.loaded = true;
-        return cb(null, data);
-      } catch (err) {
-        cb(err);
+      cb = cb || _.noop;
+      if (_.isFunction(opts)) {
+        cb = opts;
+        opts = {};
       }
-    });
-  }
+      if (!this.client || !this.channel) return cb(new Error('Wrong usage of presence.get'));
 
-  /**
-   * Send enter channel notification
-   */
-  enter() {}
-  // TODO: really needed ?
+      if (this.loaded && !opts.forceReload) return cb(null, this.clientsList);
+
+      this.client.connection.request('/room/' + this.channel, function (err, data) {
+        if (err) return cb(err);
+
+        try {
+          data = JSON.parse(data);
+          _this2.clientsList = data;
+          _this2.loaded = true;
+          return cb(null, data);
+        } catch (err) {
+          cb(err);
+        }
+      });
+    }
+
+    /**
+     * Send enter channel notification
+     */
+
+  }, {
+    key: 'enter',
+    value: function enter() {}
+    // TODO: really needed ?
 
 
-  /**
-   * Will add a new client into list of clients
-   * @param {Object} data
-   */
-  addClient(data) {
-    if (!data || !data.clientId) return;
+    /**
+     * Will add a new client into list of clients
+     * @param {Object} data
+     */
 
-    let found = false;
-    for (let i = 0; i < this.clientsList.length; i++) {
-      if (this.clientsList[i].clientId == data.clientId) {
-        found = true;
-        break;
+  }, {
+    key: 'addClient',
+    value: function addClient(data) {
+      if (!data || !data.clientId) return;
+
+      var found = false;
+      for (var i = 0; i < this.clientsList.length; i++) {
+        if (this.clientsList[i].clientId == data.clientId) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) this.clientsList.push(data);
+    }
+
+    /**
+     * Will remove client from list of clients
+     * @param {Object} data
+     */
+
+  }, {
+    key: 'removeClient',
+    value: function removeClient(data) {
+      if (!data || !data.clientId) return;
+
+      for (var i = 0; i < this.clientsList.length; i++) {
+        if (this.clientsList[i].clientId == data.clientId) {
+          this.clientsList.splice(i, 1);
+          break;
+        }
       }
     }
 
-    if (!found) this.clientsList.push(data);
-  }
+    /**
+     * Will clear list of clients from presence
+     */
 
-  /**
-   * Will remove client from list of clients
-   * @param {Object} data
-   */
-  removeClient(data) {
-    if (!data || !data.clientId) return;
+  }, {
+    key: 'clearClients',
+    value: function clearClients() {
+      this.clientsList = [];
+      this.loaded = false;
+    }
 
-    for (let i = 0; i < this.clientsList.length; i++) {
-      if (this.clientsList[i].clientId == data.clientId) {
-        this.clientsList.splice(i, 1);
-        break;
+    /**
+     * Will check current client list and update it if needed
+     * after that it will send event to other listeners
+     * @param {String} event
+     * @param {Object} data
+     */
+
+  }, {
+    key: 'sendEvent',
+    value: function sendEvent(event, data) {
+      switch (event) {
+
+        case this.events.enter:
+          this.addClient(data);
+          break;
+
+        case this.events.leave:
+          this.removeClient(data);
+          break;
       }
+      this.emit(event, data);
     }
-  }
 
-  /**
-   * Will clear list of clients from presence
-   */
-  clearClients() {
-    this.clientsList = [];
-    this.loaded = false;
-  }
+    /**
+     * Subscribe to presence events
+     * @param {String|Array} event
+     * @param {Function} cb
+     */
 
-  /**
-   * Will check current client list and update it if needed
-   * after that it will send event to other listeners
-   * @param {String} event
-   * @param {Object} data
-   */
-  sendEvent(event, data) {
-    switch (event) {
+  }, {
+    key: 'subscribe',
+    value: function subscribe(event, cb) {
+      var _this3 = this;
 
-      case this.events.enter:
-        this.addClient(data);
-        break;
+      cb = cb || _.noop;
+      if (_.isFunction(event)) {
+        cb = event;
+        event = Object.keys(this.events);
+      }
+      if (_.isString(event)) event = [event];
 
-      case this.events.leave:
-        this.removeClient(data);
-        break;
+      event.map(function (name) {
+        return _this3.on(name, cb);
+      });
     }
-    this.emit(event, data);
-  }
+  }]);
 
-  /**
-   * Subscribe to presence events
-   * @param {String|Array} event
-   * @param {Function} cb
-   */
-  subscribe(event, cb) {
-    cb = cb || _.noop;
-    if (_.isFunction(event)) {
-      cb = event;
-      event = Object.keys(this.events);
-    }
-    if (_.isString(event)) event = [event];
-
-    event.map(name => this.on(name, cb));
-  }
-};
+  return Presence;
+}(EventEmitter);
 
 },{"events":132,"lodash":195}],9:[function(require,module,exports){
 module.exports = after
