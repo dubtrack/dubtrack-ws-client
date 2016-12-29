@@ -764,6 +764,7 @@ module.exports = function (_EventEmitter) {
     value: function clearSocketListeners() {
       if (!this.socket) return;
 
+      this.socket.removeAllListeners('open');
       this.socket.removeAllListeners('close');
       this.socket.removeAllListeners('error');
       this.socket.removeAllListeners('message');
@@ -840,6 +841,11 @@ module.exports = function (_EventEmitter) {
       if (this.state == this.states.connected && this.socket.readyState == 'open') return;
 
       this.state = this.states.connecting;
+
+      // To prevent duplicate messages
+      this.clearSocketListeners();
+      if (this.socket) this.socket.close();
+
       this.socket = eio(this.url, this.options);
       this.socket.removeAllListeners('open');
       this.socket.removeAllListeners('error');
