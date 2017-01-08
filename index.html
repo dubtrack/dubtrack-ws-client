@@ -1,0 +1,84 @@
+<script src="/bin/client.js"></script>
+<script>
+var opts = {
+  path: '/',
+  transports: ['websocket', 'polling']
+}
+// var socket = new eio.Socket('ws://localhost:8081/?access_token=test', { path: '/' });
+var socket = new SocketClient({
+  host: 'localhost:8081',
+  // host: 'wss://ws.dubtrack.fm',
+  // secret: 'super-secure-secret'
+  // host: 'dubtrack-websockets-staging.us-east-1.elasticbeanstalk.com',
+  secret: 'c91c92f84d2e2786595deb907f4e010efcd0',
+  clientId: 'test'
+});
+
+var interval
+
+function newClient () {
+  var socket2 = new SocketClient({
+    // host: 'dubtrack-websockets-staging.us-east-1.elasticbeanstalk.com',
+    host: 'localhost:8081',
+    authCallback: function (data, cb) {
+      socket.auth.createTokenRequest({ clientId: 'test' }, (err, msg) => {
+        cb(err, msg)
+      })
+    }
+  });
+
+  socket2.connection.on('connected', () => {
+    console.log('client 2 connected')
+    const testChannel = socket2.channels.get('test')
+    testChannel.subscribe(console.log.bind(console, 'client2'))
+    testChannel.publish('asdfasdfasdfas')
+  })
+}
+function reattach(channel) {
+  channel.attach();
+  /* Example when using presence on the channel */
+  channel.presence.enter();
+}
+
+socket.connection.on('connected', () => {
+  newClient()
+  console.log('channels', socket.channels.all)
+
+  for (let channelName in socket.channels.all) {
+    let channel = socket.channels.get(channelName);
+    console.log(channel)
+    reattach(channel);
+  }
+  if (interval) {
+    clearInterval(interval)
+    interval = null
+  }
+
+
+  window.channel = socket.channels.get('room:5845fb26b0b5bf0c00fb03cb')
+  window.channel2 = socket.channels.get('test2')
+  // channel.attach(function () {
+  //   console.log('I\'m alive !!!!')
+  // })
+  channel.subscribe(console.log)
+
+  channel.presence.get((err, list) => {
+    console.log('list', list)
+  })
+  channel2.subscribe((msg) => {
+    console.log('test2', msg)
+  })
+
+  channel.presence.on('enter', console.log)
+  channel.presence.on('leave', (msg) => {
+    console.log('leave', msg)
+  })
+})
+
+socket.connection.on('disconnected', () => {
+  // interval = setInterval(() => {
+  //   socket.connection.connect()
+  // }, 1000)
+})
+socket.connection.on('failed', () => console.log('Failed'))
+</script>

@@ -725,19 +725,9 @@ module.exports = function (_EventEmitter) {
         this._setupReconnect();
       }
     }
-
-    /**
-     * Will set up reconnect timeout
-     */
-
   }, {
-    key: '_setupReconnect',
-    value: function _setupReconnect() {
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = null;
-      }
-
+    key: '_reconnect',
+    value: function _reconnect() {
       if (!this.options.autoReconnect) return;
 
       if (this.currentRetries >= this.options.retriesAmount) return;
@@ -751,8 +741,23 @@ module.exports = function (_EventEmitter) {
         this.currentRetries++; // increase amount of retries
         this.connect();
       }
+    }
 
-      this.reconnectTimeout = setTimeout(this._setupReconnect.bind(this), 1000);
+    /**
+     * Will set up reconnect timeout
+     */
+
+  }, {
+    key: '_setupReconnect',
+    value: function _setupReconnect() {
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+
+      if (this.currentRetries >= this.options.retriesAmount) return;
+
+      this.reconnectTimeout = setTimeout(this._reconnect.bind(this), 1000);
     }
 
     /**
@@ -779,7 +784,6 @@ module.exports = function (_EventEmitter) {
     value: function onOpen() {
       if (!this.socket) return;
 
-      this.currentRetries = 0;
       this.clearSocketListeners();
       this.socket.on('close', this.onClose.bind(this));
       this.socket.on('error', this.onError.bind(this));
@@ -820,6 +824,7 @@ module.exports = function (_EventEmitter) {
           // Update clientId
           if (data.clientId) this.clientId = data.clientId;
 
+          this.currentRetries = 0;
           this.state = this.states.connected;
           this.emit(this.states.connected);
           break;
