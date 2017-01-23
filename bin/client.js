@@ -636,9 +636,6 @@ module.exports = function (_EventEmitter) {
 
     var prefix = _this.secure ? 'wss://' : 'ws://';
     _this.url = prefix + _this.host + '?connect=1';
-    if (_this.secret) _this.url += '&secret=' + options.secret;
-
-    if (_this.token) _this.url += '&access_token=' + options.token;
 
     if (_.isFunction(options.authCallback)) {
       options.noAutoConnect = true;
@@ -647,11 +644,9 @@ module.exports = function (_EventEmitter) {
 
         if (_.isString(tokenOrData)) {
           // It's token
-          _this.url += '&access_token=' + tokenOrData;
           _this.token = tokenOrData;
         }
         if (_.isObject(tokenOrData) && tokenOrData.token) {
-          _this.url += '&access_token=' + tokenOrData.token;
           _this.token = tokenOrData.token;
         }
 
@@ -677,12 +672,30 @@ module.exports = function (_EventEmitter) {
   }
 
   /**
-   * Check if client has set auth params
-   * @return {Boolean}
+   * Build a full URL for connection
+   * @return {String}
    */
 
 
   _createClass(Connection, [{
+    key: '_buildUrl',
+    value: function _buildUrl() {
+      var url = this.url;
+      if (this.secret) url += '&secret=' + this.secret;
+
+      if (this.token) url += '&access_token=' + this.token;
+
+      if (this.clientId) url += '&clientId=' + this.clientId;
+
+      return url;
+    }
+
+    /**
+     * Check if client has set auth params
+     * @return {Boolean}
+     */
+
+  }, {
     key: 'hasAuth',
     value: function hasAuth() {
       return Boolean(this.token || this.secret);
@@ -864,7 +877,8 @@ module.exports = function (_EventEmitter) {
       this.clearSocketListeners();
       if (this.socket) this.socket.close();
 
-      this.socket = eio(this.url, this.options);
+      var url = this._buildUrl();
+      this.socket = eio(url, this.options);
       this.socket.removeAllListeners('open');
       this.socket.removeAllListeners('error');
       this.socket.once('open', this.onOpen.bind(this));
