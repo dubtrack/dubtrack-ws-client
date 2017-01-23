@@ -884,6 +884,7 @@ module.exports = function (_EventEmitter) {
       this.socket.once('open', this.onOpen.bind(this));
       this.socket.once('error', function (err) {
         if (err && err.type == 'TransportError') _this2.fail(err);
+        _this2._setupReconnect();
       });
     }
 
