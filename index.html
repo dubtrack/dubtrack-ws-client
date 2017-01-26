@@ -63,9 +63,9 @@ socket.connection.on('connected', () => {
   // })
   channel.subscribe(console.log)
 
-  // channel.presence.get((err, list) => {
-  //   console.log('list', list)
-  // })
+  channel.presence.get({ clientId: socket.connection.clientId }, (err, list) => {
+    console.log('list', list)
+  })
   channel2.subscribe((msg) => {
     console.log('test2', msg)
   })

@@ -1335,7 +1335,13 @@ module.exports = function (_EventEmitter) {
 
       if (this.loaded && !opts.forceReload) return cb(null, this.clientsList);
 
-      this.client.connection.request('/room/' + this.channel, function (err, data) {
+      var params = [];
+      if (opts.connectionId || opts.socketId) params.push('connectionId=' + (opts.connectionId || opts.socketId));
+
+      if (opts.clientId) params.push('clientId=' + opts.clientId);
+
+      var url = '/room/' + this.channel + '?' + params.join('&');
+      this.client.connection.request(url, function (err, data) {
         if (err) return cb(err);
 
         try {
