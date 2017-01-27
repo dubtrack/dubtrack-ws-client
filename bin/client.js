@@ -317,11 +317,11 @@ module.exports = function (_EventEmitter) {
       this.once(this.states.detached, function (msg) {
         _this3.state = _this3.states.detached;
         cb();
+        _this3.removeAllListeners();
       });
       this.client.connection.send(Message.leaveChannel(this.name));
       this.presence.leave();
       this.presence.clearListeners();
-      this.removeAllListeners();
       // TODO: remove all listeners from Channel
     }
 
