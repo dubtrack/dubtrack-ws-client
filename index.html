@@ -42,7 +42,7 @@ function reattach(channel) {
 }
 
 socket.connection.on('connected', () => {
-  // newClient()
+  newClient()
   console.log('channels', socket.channels.all)
 
   for (let channelName in socket.channels.all) {
