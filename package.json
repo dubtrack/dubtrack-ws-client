@@ -4,7 +4,7 @@
   "description": "Dubtrack WS client lib",
   "main": "lib/index.js",
   "scripts": {
-    "client": "node ./node_modules/browserify/bin/cmd.js ./lib/index.js -t [ babelify --comments false ] -o ./bin/client.js"
+    "client": "node ./node_modules/webpack/bin/webpack.js"
   },
   "repository": {
     "type": "git",
@@ -34,10 +34,6 @@
     "browserify": "^13.1.1",
     "eslint": "^3.12.2",
     "eslint-config-trails": "^2.0.1",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-concat": "^2.6.1",
-    "webpack": "^2.2.1",
-    "webpack-stream": "^3.2.0"
+    "webpack": "^2.2.1"
   }
 }

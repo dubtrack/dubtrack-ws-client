@@ -9,11 +9,14 @@ module.exports = {
         filename: 'client.js',
         path: path.resolve(__dirname, 'bin')
     },
+    externals: {
+        global: glob()
+    },
     module: {
         loaders: [
             {
                 test: /\.js$/,
-                exclude: /(node_modules|bower_components)/,
+                exclude: /(node_modules|bower_components|browser)/,
                 loader: 'babel-loader',
                 query: {
                     presets: ['es2015']
@@ -35,4 +38,16 @@ module.exports = {
             }
         })
     ]
+}
+
+/**
+ * Populates `global`.
+ *
+ * @api private
+ */
+
+function glob() {
+    return 'typeof self !== "undefined" ? self : ' +
+      'typeof window !== "undefined" ? window : ' +
+      'typeof global !== "undefined" ? global : {}';
 }
