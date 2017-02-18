@@ -29078,27 +29078,21 @@ module.exports = function () {
 
     this.client = client;
 
-    this._all = {};
+    this.all = {};
   }
 
   /**
-   * Channels.all property getter
-   * @return {String[]}
+   * Check if channel exist
+   * @private
+   * @param {String} channel
+   * @return {Boolean}
    */
 
 
   _createClass(Channels, [{
     key: '_has',
-
-
-    /**
-     * Check if channel exist
-     * @private
-     * @param {String} channel
-     * @return {Boolean}
-     */
     value: function _has(channel) {
-      return !(!channel || !this._all[channel]);
+      return !(!channel || !this.all[channel]);
     }
 
     /**
@@ -29113,8 +29107,8 @@ module.exports = function () {
       if (!name) return;
 
       name = String(name);
-      var channel = this._all[name];
-      if (!channel) channel = this._all[name] = new Channel(this.client, name);
+      var channel = this.all[name];
+      if (!channel) channel = this.all[name] = new Channel(this.client, name);
 
       return channel;
     }
@@ -29129,8 +29123,8 @@ module.exports = function () {
     value: function release(name) {
       if (!name) return;
 
-      var channel = this._all[name];
-      if (channel) delete this._all[name];
+      var channel = this.all[name];
+      if (channel) delete this.all[name];
     }
 
     /**
@@ -29195,11 +29189,6 @@ module.exports = function () {
       if (!channel) return;
 
       channel.firePresence(msg);
-    }
-  }, {
-    key: 'all',
-    get: function get() {
-      return Object.keys(this._all);
     }
   }]);
 
