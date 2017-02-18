@@ -29527,8 +29527,10 @@ module.exports = function (_EventEmitter) {
       this.socket.removeAllListeners('error');
       this.socket.once('open', this.onOpen.bind(this));
       this.socket.once('error', function (err) {
-        if (err && err.type == 'TransportError') _this2.fail(err);
-        _this2._setupReconnect();
+        if (err && err.type == 'TransportError') {
+          _this2.fail(err);
+          _this2._setupReconnect();
+        }
       });
     }
 
@@ -35697,21 +35699,32 @@ module.exports = function (_EventEmitter) {
         cb(new Error('Internal error...'));
         try {
           this.removeListener('enter', listener);
-        } catch (err) {}
+        } catch (err) {
+          // Ignore this error
+        }
       }.bind(this, listener, cb), 10000);
       // Add listener to enter event
       this.on('enter', listener);
 
       this.client.connection.send(Message.presence(this.client.connection.clientId, this.channel, Message.PRESENCE.ENTER));
     }
+
+    /**
+     * Leave room
+     * @param {Function} [cb]
+     */
+
   }, {
     key: 'leave',
-    value: function leave() {
+    value: function leave(cb) {
+      cb = cb || _.noop;
       if (!this.channel || !this.client || !this.client.connection) return cb(new Error('No client or channel exist'));
 
       if (!this.client.connection.clientId || !this.client.connection.isConnected()) return cb(new Error('No connection exist'));
 
       this.client.connection.send(Message.presence(this.client.connection.clientId, this.channel, Message.PRESENCE.LEAVE));
+
+      return cb();
     }
 
     /**
