@@ -4,7 +4,8 @@
   "description": "Dubtrack WS client lib",
   "main": "lib/index.js",
   "scripts": {
-    "client": "node ./node_modules/webpack/bin/webpack.js"
+    "test": "./node_modules/eslint/bin/eslint.js .",
+    "client": "./node_modules/eslint/bin/eslint.js . && node ./node_modules/webpack/bin/webpack.js"
   },
   "repository": {
     "type": "git",
@@ -35,5 +36,17 @@
     "eslint": "^3.12.2",
     "eslint-config-trails": "^2.0.1",
     "webpack": "^2.2.1"
+  },
+  "eslintConfig": {
+    "extends": "trails",
+    "rules": {
+      "indent": [
+        "error",
+        2,
+        {
+          "SwitchCase": 1
+        }
+      ]
+    }
   }
 }
