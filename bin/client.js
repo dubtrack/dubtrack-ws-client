@@ -29392,6 +29392,12 @@ module.exports = function (_EventEmitter) {
     // no reconnections
     _this.currentRetries = 0;
 
+    /**
+     * List of internal callbacks
+     * @type {Array}
+     */
+    _this._callbacks = [];
+
     if (!_this.options.noAutoConnect) _this.connect();
     return _this;
   }
@@ -29510,6 +29516,44 @@ module.exports = function (_EventEmitter) {
     }
 
     /**
+     * Add an internal callback for future invoke
+     * @param {String}   reqId
+     * @param {Function} cb
+     * @param {Number}   [timeout]
+     */
+
+  }, {
+    key: '_addCallback',
+    value: function _addCallback(reqId, cb, timeout) {
+      if (this._callbacks[reqId]) throw new Error('Could not make add callback operation with reqId: ' + reqId);
+
+      var err = new Error('Operation timeout for callback: ' + reqId);
+      this._callbacks[reqId] = {
+        cb: cb,
+        timeout: setTimeout(this._execCallback.bind(this, err, null), timeout || 15000)
+      };
+    }
+
+    /**
+     * Will Execute existing callback with error and data
+     * @param  {String} reqId
+     * @param  {Error?} err
+     * @param  {*} data
+     */
+
+  }, {
+    key: '_execCallback',
+    value: function _execCallback(reqId, err, data) {
+      if (!this._callbacks[reqId]) return;
+
+      if (this._callbacks[reqId].timeout) clearTimeout(this._callbacks[reqId].timeout);
+
+      if (_.isFunction(this._callbacks[reqId].cb)) this._callbacks[reqId].cb(err, data);
+
+      delete this._callbacks[reqId];
+    }
+
+    /**
      * Remove all socket listeners
      */
 
@@ -29564,6 +29608,8 @@ module.exports = function (_EventEmitter) {
     key: 'onMessage',
     value: function onMessage(data) {
       if (_.isString(data)) data = MessageMaster.parse(data);
+
+      if (data.reqId && this._callbacks[data.reqId]) this._execCallback(data.reqId, null, data);
 
       if (!data.action) return;
 
@@ -29627,6 +29673,46 @@ module.exports = function (_EventEmitter) {
       if (_.isObject(message)) message = MessageMaster.stringify(message);
 
       this.socket.send(message);
+    }
+
+    /**
+     * Send a message with callback
+     * @param  {Object} message
+     * @param  {Function} cb
+     * @param  {Number} timeout
+     */
+
+  }, {
+    key: 'sendCallback',
+    value: function sendCallback(message, cb, timeout) {
+      if (!_.isFunction(cb)) return;
+
+      if (!_.isObject(message)) return cb(new Error('Wrong message'));
+
+      // default timeout for callback
+      timeout = timeout || 15000;
+      // Add a identifier
+      message.reqId = this.randomReqId();
+      this._addCallback(message.reqId, message, timeout);
+      this.send(message);
+    }
+
+    /**
+     * Generate random request id
+     * @return {String}
+     */
+
+  }, {
+    key: 'randomReqId',
+    value: function randomReqId() {
+      var text = '';
+      var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+      for (var i = 0; i < 24; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+
+      return text + (this.connectionId || '----');
     }
 
     /**
@@ -35688,6 +35774,12 @@ module.exports = function (_EventEmitter) {
      * @type {Object}
      */
     _this.listeners = {};
+
+    /**
+     * Internal listeners for callbacks
+     * @type {Object}
+     */
+    _this._cbListeners = {};
     return _this;
   }
 
@@ -35755,41 +35847,14 @@ module.exports = function (_EventEmitter) {
   }, {
     key: 'enter',
     value: function enter(cb) {
-      var _this4 = this;
-
       cb = cb || _.noop;
       if (!this.channel || !this.client || !this.client.connection) return cb(new Error('No client or channel exist'));
 
       if (!this.client.connection.clientId || !this.client.connection.isConnected()) return cb(new Error('No connection exist'));
 
-      var listener = function listener(data) {
-        if (!_.isObject(data) || !data.clientId) return;
+      var message = Message.presence(this.client.connection.clientId, this.channel, Message.PRESENCE.ENTER);
 
-        if (data.clientId != _this4.client.connection.clientId) return;
-
-        if (data.action != 0) return;
-
-        if (_this4.client.connection.connectionId && data.connectionId != _this4.client.connection.connectionId) return;
-
-        if (_this4._enterTimeout) {
-          clearTimeout(_this4._enterTimeout);
-          _this4._enterTimeout = null;
-        }
-        cb(null, data);
-        _this4.removeListener('enter', listener);
-      };
-      this._enterTimeout = setTimeout(function (listener, cb) {
-        cb(new Error('Internal error...'));
-        try {
-          this.removeListener('enter', listener);
-        } catch (err) {
-          // Ignore this error
-        }
-      }.bind(this, listener, cb), 30000);
-      // Add listener to enter event
-      this.on('enter', listener);
-
-      this.client.connection.send(Message.presence(this.client.connection.clientId, this.channel, Message.PRESENCE.ENTER));
+      this.client.connection.sendCallback(message, cb);
     }
 
     /**
@@ -35892,7 +35957,7 @@ module.exports = function (_EventEmitter) {
   }, {
     key: 'subscribe',
     value: function subscribe(event, cb) {
-      var _this5 = this;
+      var _this4 = this;
 
       cb = cb || _.noop;
       if (_.isFunction(event)) {
@@ -35902,10 +35967,10 @@ module.exports = function (_EventEmitter) {
       if (_.isString(event)) event = [event];
 
       event.map(function (name) {
-        if (!_this5.listeners[name]) _this5.listeners[name] = [];
+        if (!_this4.listeners[name]) _this4.listeners[name] = [];
 
-        _this5.listeners[name].push(cb);
-        _this5.on(name, cb);
+        _this4.listeners[name].push(cb);
+        _this4.on(name, cb);
       });
     }
   }]);
