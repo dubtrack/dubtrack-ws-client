@@ -27,7 +27,7 @@ module.exports = {
   resolve: {
     alias: {
       // 'engine.io-client': path.resolve(__dirname, 'browser/engine.io.js'),
-      'lodash': path.resolve(__dirname, 'browser/lodash.core.min.js')
+      'lodash': path.resolve(__dirname, 'browser/lodash.min.js')
     }
   },
 
