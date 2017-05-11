@@ -14039,7 +14039,7 @@ module.exports = function (_EventEmitter) {
     // Default options for websocket connection
     _this.defaultOpts = {
       path: '/ws',
-      // transports: ['websocket', 'polling'],
+      transports: ['websocket', 'polling'],
       requestTimeout: 25000
       // transports: ['websocket']
     };
