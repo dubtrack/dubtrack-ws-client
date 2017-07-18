@@ -1,8 +1,9 @@
 <script src="../bin/client.js"></script>
 <script>
 var socket = new SocketClient({
-  host: 'wss://ws.dubtrack.fm',
-  secret: 'some-super-secret'
+  // host: 'wss://dubtrack-websockets-staging.us-east-1.elasticbeanstalk.com',
+  host: 'localhost:8081',
+  secret: '36ae7a7d6930d146f5a5dbe2c7efc15383509cd1c9cfc9b8'
 });
 
 function reattach(channel) {
